@@ -1,7 +1,12 @@
-FROM golang:1.15
+FROM golang:1.15 as builder
+WORKDIR /app
 
+COPY go.mod .
 COPY main.go .
 
-ENV GODEBUG=madvdontneed=1
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o app .
 
-CMD ["go", "run", "main.go"]
+FROM alpine:latest
+ENV GODEBUG=madvdontneed=1
+COPY --from=builder /app/app .
+CMD ["./app"]
